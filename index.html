@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>产品设计部任务管理(公用版)</title>
+    <title>产品设计部管理看板</title>
     <script src="./data/dashboard-data.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -333,57 +333,6 @@
             width: min(1600px, 100%);
             margin: 0 auto;
             padding: 24px 32px 40px;
-        }
-
-        .public-view-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.18);
-            color: rgba(255,255,255,0.96);
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .public-page-note {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 18px;
-            padding: 12px 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(18, 181, 122, 0.12);
-            border-left: 4px solid rgba(18, 181, 122, 0.72);
-            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,251,248,0.98) 100%);
-            box-shadow: 0 6px 20px rgba(17, 110, 79, 0.05);
-        }
-
-        .public-page-note-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1f4533;
-        }
-
-        .public-page-note-text {
-            margin-top: 2px;
-            font-size: 12px;
-            color: #5d786b;
-        }
-
-        .public-page-note-tag {
-            flex-shrink: 0;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: rgba(18, 181, 122, 0.1);
-            color: #17684a;
-            font-size: 11px;
-            letter-spacing: 0.04em;
-            font-weight: 700;
         }
 
         .public-member-summary {
@@ -3167,7 +3116,10 @@
         }
 
         function getPublicPageFromUrl() {
-            return 'department-overview';
+            const searchParams = new URLSearchParams(window.location.search);
+            const requestedPage = normalizePageId((searchParams.get(PUBLIC_PAGE_QUERY_KEY) || '').trim());
+            if (ALLOWED_PUBLIC_PAGES.includes(requestedPage)) return requestedPage;
+            return '';
         }
 
         function isPublicSinglePageMode() {
@@ -3183,17 +3135,13 @@
             if (!titleNode || !subtitleNode) return;
 
             if (isPublic && state.publicPage === 'department-overview') {
-                document.title = '产品设计部任务管理(公用版)';
-                titleNode.textContent = '产品设计部任务管理(公用版)';
-                subtitleNode.textContent = '';
-                subtitleNode.style.display = 'none';
+                titleNode.textContent = '产品设计部任务管理-公用版';
+                subtitleNode.textContent = '产品设计部';
                 return;
             }
 
-            document.title = '产品设计部管理看板';
             titleNode.textContent = '产品设计部管理看板';
             subtitleNode.textContent = '产品设计部';
-            subtitleNode.style.display = '';
         }
 
         function renderPublicPageNote() {
@@ -5087,7 +5035,7 @@
                     desc: '这几个文件决定了导入分析模式的日常维护成本。后续新增脚本或数据源，建议沿着这套入口继续收敛。',
                     noteList: [
                         'build_dashboard_data.js：统一负责把月度主源转换成静态看板数据。',
-                        'public-member-overview/index.html：成员发布包入口，只保留部门概览视图。',
+                        '产品设计部管理看板.html：统一承接主看板展示与浏览说明。',
                         'OKR管理看板.html：当前展示容器，后续需要切换到底层月度 OKR 取数。',
                         'tmp_import_lixin_okr_2026.py：当前已验证可写入 SQLite 的月度导入入口。'
                     ]
