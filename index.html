@@ -397,6 +397,74 @@
             box-shadow: 0 14px 36px rgba(23, 91, 67, 0.08);
         }
 
+        .public-page-note {
+            margin-bottom: 18px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(154, 187, 174, 0.42);
+            background: linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(244,250,247,0.98) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 10px 28px rgba(22, 86, 61, 0.06);
+        }
+
+        .public-page-note-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .public-page-note-kicker {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #5f8978;
+            font-weight: 700;
+        }
+
+        .public-page-note-text {
+            font-size: 13px;
+            color: #3c6254;
+            line-height: 1.6;
+        }
+
+        .public-page-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            border-radius: 999px;
+            background: rgba(18, 181, 122, 0.08);
+            border: 1px solid rgba(18, 181, 122, 0.14);
+            flex-wrap: wrap;
+        }
+
+        .public-page-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 112px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            color: #2d6150;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.18s ease;
+        }
+
+        .public-page-chip:hover {
+            background: rgba(18, 181, 122, 0.12);
+        }
+
+        .public-page-chip.active {
+            background: linear-gradient(135deg, #12b57a 0%, #0e9f6e 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 18px rgba(18, 181, 122, 0.22);
+        }
+
         .public-member-summary-head {
             display: flex;
             justify-content: space-between;
@@ -3006,7 +3074,7 @@
         const TASK_TYPE_ORDER = ['产品规划', '版本内审', 'UI设计', '确认文案+设计图', '版本外审', '撰写验收文档', '版本验收', '调研分析', '产出增长方案', '数据看板维护', '项目复盘', '其他'];
         const PAGE_STORAGE_KEY = 'department_management_current_page';
         const PUBLIC_PAGE_QUERY_KEY = 'public';
-        const ALLOWED_PUBLIC_PAGES = ['department-overview'];
+        const ALLOWED_PUBLIC_PAGES = ['department-overview', 'department-calendar'];
         const APP_ORIGIN = (() => {
             const { protocol, hostname, port, origin } = window.location;
             if (protocol === 'file:') return 'http://localhost:9020';
@@ -3167,6 +3235,9 @@
         }
 
         function getPublicPageFromUrl() {
+            const searchParams = new URLSearchParams(window.location.search);
+            const requestedPage = normalizePageId((searchParams.get(PUBLIC_PAGE_QUERY_KEY) || 'department-overview').trim());
+            if (ALLOWED_PUBLIC_PAGES.includes(requestedPage)) return requestedPage;
             return 'department-overview';
         }
 
@@ -3182,7 +3253,7 @@
             const subtitleNode = document.querySelector('.topbar-subtitle');
             if (!titleNode || !subtitleNode) return;
 
-            if (isPublic && state.publicPage === 'department-overview') {
+            if (isPublic && ALLOWED_PUBLIC_PAGES.includes(state.publicPage)) {
                 document.title = '产品设计部任务管理(公用版)';
                 titleNode.textContent = '产品设计部任务管理(公用版)';
                 subtitleNode.textContent = '';
@@ -3197,7 +3268,21 @@
         }
 
         function renderPublicPageNote() {
-            return '';
+            if (!isPublicSinglePageMode() || !ALLOWED_PUBLIC_PAGES.includes(state.publicPage)) return '';
+
+            const currentPage = state.publicPage || 'department-overview';
+            return `
+                <section class="public-page-note">
+                    <div class="public-page-note-copy">
+                        <div class="public-page-note-kicker">Member Access</div>
+                        <div class="public-page-note-text">成员公开版现已开放“部门概览”和“日历看板”，方便从任务清单和日历落点两个视角查看同一周期内容。</div>
+                    </div>
+                    <div class="public-page-switcher">
+                        <a class="public-page-chip ${currentPage === 'department-overview' ? 'active' : ''}" href="?public=department-overview">部门概览</a>
+                        <a class="public-page-chip ${currentPage === 'department-calendar' ? 'active' : ''}" href="?public=department-calendar">日历看板</a>
+                    </div>
+                </section>
+            `;
         }
 
         function renderPublicMemberSummary(rows, periodLabel) {
@@ -5224,6 +5309,7 @@
                 const monthRows = getCalendarRows(calendarMonth);
                 const filteredRows = applyCalendarFilters(monthRows);
                 container.innerHTML = `
+                    ${renderPublicPageNote()}
                     <div class="filter-panel calendar-month-panel">
                         ${getAvailableMonths().map(month => `<button class="calendar-month-chip ${calendarMonth === month ? 'active' : ''}" type="button" onclick="changeCalendarMonth('${month}')">${month}</button>`).join('')}
                     </div>
@@ -5238,7 +5324,7 @@
                         ${renderCalendarFilters(monthRows)}
                     </div>
                     ${renderCalendarBoard(filteredRows, calendarMonth)}
-                    ${renderBoardAnalysisModule('日历看板分析', '围绕当前月份和筛选条件，快速判断任务密度、责任压力和延期风险。', filteredRows, formatCalendarMonthLabel(calendarMonth))}
+                    ${isPublicSinglePageMode() ? '' : renderBoardAnalysisModule('日历看板分析', '围绕当前月份和筛选条件，快速判断任务密度、责任压力和延期风险。', filteredRows, formatCalendarMonthLabel(calendarMonth))}
                 `;
                 return;
             }
