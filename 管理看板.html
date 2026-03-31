@@ -2657,17 +2657,23 @@
             border-color: #173147;
         }
 
-        .project-board-version-tabs {
+        .project-board-linked-filters {
             display: grid;
-            gap: 14px;
+            grid-template-columns: minmax(220px, 320px) minmax(340px, 1fr);
+            gap: 12px;
+            align-items: end;
         }
 
-        .project-board-version-group {
+        .project-board-linked-filter-card {
             display: grid;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .project-board-version-group-label {
+        .project-board-linked-filter-card-wide {
+            min-width: 0;
+        }
+
+        .project-board-linked-filter-label {
             font-size: 11px;
             font-weight: 800;
             letter-spacing: .12em;
@@ -2675,58 +2681,41 @@
             color: #6e8595;
         }
 
-        .project-board-version-group-list {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .project-board-version-tab {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 6px;
-            min-width: 200px;
-            padding: 12px 14px;
+        .project-board-linked-filter-select {
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            padding: 12px 42px 12px 14px;
             border-radius: 16px;
             border: 1px solid #dbe6ec;
-            background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%237b8ea1' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 14px 14px;
             color: #264255;
             box-shadow: 0 10px 22px rgba(36, 52, 71, 0.05);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
             cursor: pointer;
-            text-align: left;
         }
 
-        .project-board-version-tab span {
+        .project-board-linked-filter-select:hover {
+            border-color: rgba(15, 118, 110, 0.28);
+        }
+
+        .project-board-linked-filter-select:focus {
+            outline: none;
+            border-color: rgba(15, 118, 110, 0.5);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+        }
+
+        .project-board-linked-filter-meta {
+            grid-column: 1 / -1;
             font-size: 12px;
-            font-weight: 700;
-            line-height: 1.6;
-        }
-
-        .project-board-version-tab strong {
-            font-size: 11px;
             color: #738896;
-        }
-
-        .project-board-version-tab small {
-            font-size: 11px;
-            color: #708899;
-            font-weight: 700;
-        }
-
-        .project-board-version-tab.active {
-            border-color: transparent;
-            color: #ffffff;
-            background: linear-gradient(135deg, var(--product-tone, #0f766e) 0%, var(--product-tone-strong, #173147) 100%);
-            box-shadow: 0 18px 30px var(--product-tone-shadow, rgba(15, 118, 110, 0.22));
-        }
-
-        .project-board-version-tab.active strong {
-            color: rgba(255,255,255,.8);
-        }
-
-        .project-board-version-tab.active small {
-            color: rgba(255,255,255,.75);
+            line-height: 1.6;
         }
 
         .project-board-product-panel {
@@ -3381,8 +3370,8 @@
         }
 
         @media (max-width: 960px) {
-            .project-board-version-tab {
-                min-width: 100%;
+            .project-board-linked-filters {
+                grid-template-columns: 1fr;
             }
 
             .info-source-metrics {
@@ -4816,9 +4805,10 @@
         const PAGE_STORAGE_KEY = 'department_management_current_page';
         const SIDEBAR_COLLAPSED_STORAGE_KEY = 'department_management_sidebar_collapsed';
         const PUBLIC_SIDEBAR_COLLAPSED_STORAGE_KEY = 'department_management_public_sidebar_collapsed';
-        const PROJECT_BOARD_STATUS_STORAGE_KEY = 'department_management_project_board_status';
+        const PROJECT_BOARD_STATUS_STORAGE_KEY = 'department_management_project_board_status_v2';
         const PROJECT_BOARD_PRODUCT_SELECTION_STORAGE_KEY = 'department_management_project_board_product_selection';
-        const PROJECT_BOARD_VERSION_SELECTION_STORAGE_KEY = 'department_management_project_board_version_selection';
+        const PROJECT_BOARD_VERSION_SELECTION_STORAGE_KEY = 'department_management_project_board_version_selection_v2';
+        const PROJECT_BOARD_PLATFORM_SELECTION_STORAGE_KEY = 'department_management_project_board_platform_selection';
         const WEEKLY_BOARD_ALL_VALUE = '__all__';
         const PUBLIC_PAGE_QUERY_KEY = 'public';
         const ALLOWED_PUBLIC_PAGES = ['department-overview', 'department-calendar', 'department-weekly'];
@@ -4894,7 +4884,8 @@
             personFilterProduct: 'all',
             personFilterTaskType: 'all',
             productSelection: {},
-            projectBoardVersionStatus: 'open',
+            projectBoardVersionStatus: 'all',
+            projectBoardPlatformSelection: {},
             projectBoardVersionSelection: {},
             infoSource: {
                 metaLoaded: false,
@@ -4987,11 +4978,16 @@
             if (storedVersionSelection && typeof storedVersionSelection === 'object') {
                 state.projectBoardVersionSelection = storedVersionSelection;
             }
+
+            const storedPlatformSelection = loadJsonStorage(PROJECT_BOARD_PLATFORM_SELECTION_STORAGE_KEY, {});
+            if (storedPlatformSelection && typeof storedPlatformSelection === 'object') {
+                state.projectBoardPlatformSelection = storedPlatformSelection;
+            }
         }
 
         function persistProjectBoardPreferences() {
             try {
-                localStorage.setItem(PROJECT_BOARD_STATUS_STORAGE_KEY, state.projectBoardVersionStatus || 'open');
+                localStorage.setItem(PROJECT_BOARD_STATUS_STORAGE_KEY, state.projectBoardVersionStatus || 'all');
             } catch (error) {
                 return;
             }
@@ -4999,6 +4995,7 @@
             saveJsonStorage(PROJECT_BOARD_PRODUCT_SELECTION_STORAGE_KEY, {
                 'pdf-line-overview': state.productSelection['pdf-line-overview'] || ''
             });
+            saveJsonStorage(PROJECT_BOARD_PLATFORM_SELECTION_STORAGE_KEY, state.projectBoardPlatformSelection || {});
             saveJsonStorage(PROJECT_BOARD_VERSION_SELECTION_STORAGE_KEY, state.projectBoardVersionSelection || {});
         }
 
@@ -5355,7 +5352,7 @@
                             <div class="okr-preview-note-title">当前维护方式</div>
                             <h3>部门 OKR 统一走月度表</h3>
                             <p>你已经把月度 OKR 的字段结构重新梳理清楚，后续成员也统一在这张表里更新和维护。管理中枢这里先同步这个口径，避免继续把不同表混在一起解释。</p>
-                            <span class="okr-preview-code">https://docs.google.com/spreadsheets/d/1pnH5klcm5m9yPT2dhQDWKsy8QCoDYKHXUdXoJ8E_1aE/edit?gid=754514759#gid=754514759</span>
+                               <span class="okr-preview-code">https://docs.google.com/spreadsheets/d/1pnH5klcm5m9yPT2dhQDWKsy8QCoDYKHXUdXoJ8E_1aE/edit?gid=1370902590#gid=1370902590</span>
                         </div>
                         <div class="okr-preview-note-card">
                             <div class="okr-preview-note-title">这页先承担什么</div>
@@ -7024,7 +7021,119 @@
             return [];
         }
 
-        function getCalendarRows(monthKey) {
+        function getCalendarRowDedupKey(row) {
+            const owner = String(row.raw_owner || row.person || '').trim();
+            const version = String(row.version_no || '').trim();
+            const objective = String(row.objective_id || '').trim();
+            const businessKrId = String(row.business_kr_id || row.business_kr || '').trim();
+            const taskType = String(row.task_type || '').trim();
+            const title = String(row.key_result_text || row.objective_text || row.task_name || '').trim().replace(/\s+/g, ' ');
+            const versionRequirement = String(row.version_requirement || '').trim().replace(/\s+/g, ' ');
+            const deliverableType = String(row.deliverable_type || '').trim();
+
+            const primaryScheduleSignature = [
+                String(row.start_time || '').trim().replace(/\s+/g, ' '),
+                String(row.due_time || '').trim().replace(/\s+/g, ' '),
+                String(Number.isFinite(Number(row.progress)) ? Number(row.progress) : 0)
+            ].join('||');
+
+            const scheduleSignature = [
+                String(row.start_time || '').trim().replace(/\s+/g, ' '),
+                String(row.due_time || '').trim().replace(/\s+/g, ' '),
+                String(row.segmented_time || '').trim().replace(/\s+/g, ' '),
+                String(Number.isFinite(Number(row.progress)) ? Number(row.progress) : 0)
+            ].join('||');
+
+            if (version && versionRequirement) {
+                return [
+                    row.calendar_date,
+                    owner,
+                    version,
+                    versionRequirement,
+                    deliverableType || taskType
+                ].join('::');
+            }
+
+            if (version && primaryScheduleSignature !== '||||0') {
+                return [
+                    row.calendar_date,
+                    owner,
+                    version,
+                    deliverableType || taskType,
+                    primaryScheduleSignature
+                ].join('::');
+            }
+
+            if (objective) {
+                return [
+                    row.calendar_date,
+                    owner,
+                    version,
+                    objective
+                ].join('::');
+            }
+
+            if (businessKrId && version) {
+                return [
+                    row.calendar_date,
+                    owner,
+                    version,
+                    businessKrId
+                ].join('::');
+            }
+
+            return [
+                row.calendar_date,
+                owner,
+                version,
+                taskType,
+                primaryScheduleSignature || scheduleSignature || (objective || title)
+            ].join('::');
+        }
+
+        function getCalendarRowDedupIdentity(row) {
+            const owner = String(row.raw_owner || row.person || '').trim() || '未分配';
+            const version = String(row.version_no || '').trim() || '未填写版本号';
+            const objective = String(row.objective_id || '').trim();
+            const title = String(row.key_result_text || row.objective_text || row.task_name || '').trim().replace(/\s+/g, ' ') || '未命名任务';
+            const taskType = String(row.task_type || '').trim() || '其他';
+            const primaryScheduleSignature = [
+                String(row.start_time || '').trim().replace(/\s+/g, ' '),
+                String(row.due_time || '').trim().replace(/\s+/g, ' '),
+                String(Number.isFinite(Number(row.progress)) ? Number(row.progress) : 0)
+            ].join('||');
+            const scheduleSignature = [
+                String(row.start_time || '').trim().replace(/\s+/g, ' '),
+                String(row.due_time || '').trim().replace(/\s+/g, ' '),
+                String(row.segmented_time || '').trim().replace(/\s+/g, ' '),
+                String(Number.isFinite(Number(row.progress)) ? Number(row.progress) : 0)
+            ].join('||');
+
+            return {
+                calendarDate: row.calendar_date,
+                owner,
+                version,
+                objective,
+                title,
+                objectiveOrTitle: objective || title,
+                taskType,
+                primaryScheduleSignature,
+                scheduleSignature
+            };
+        }
+
+        function getCalendarRowPriority(row) {
+            const progress = Number.isFinite(Number(row.progress)) ? Number(row.progress) : 0;
+            return [
+                String(row.period || ''),
+                String(row.actual_delivery_time || '').trim() ? '1' : '0',
+                String(row.due_time || '').trim() ? '1' : '0',
+                String(row.segmented_time || '').trim() ? '1' : '0',
+                String(progress).padStart(3, '0')
+            ].join('::');
+        }
+
+        function getCalendarExpandedRows(monthKey) {
             return state.normalizedRows
                 .filter(row => row.period_type === 'month')
                 .flatMap(row => {
@@ -7037,6 +7146,147 @@
                     }));
                 })
                 .filter(Boolean);
+        }
+
+        function dedupeCalendarRows(rows) {
+            const dedupedMap = new Map();
+            const groupedMap = new Map();
+
+            rows.forEach(row => {
+                const dedupKey = getCalendarRowDedupKey(row);
+                if (!groupedMap.has(dedupKey)) groupedMap.set(dedupKey, []);
+                groupedMap.get(dedupKey).push(row);
+
+                const existing = dedupedMap.get(dedupKey);
+                if (!existing || getCalendarRowPriority(row) > getCalendarRowPriority(existing)) {
+                    dedupedMap.set(dedupKey, row);
+                }
+            });
+
+            const duplicateGroups = Array.from(groupedMap.entries())
+                .filter(([, items]) => items.length > 1)
+                .map(([dedupKey, items]) => {
+                    const kept = dedupedMap.get(dedupKey) || items[0];
+                    const sortedItems = [...items].sort((left, right) => getCalendarRowPriority(right).localeCompare(getCalendarRowPriority(left), 'zh-CN'));
+                    const removed = sortedItems.filter(item => item !== kept);
+                    return {
+                        dedupKey,
+                        identity: getCalendarRowDedupIdentity(kept),
+                        kept,
+                        removed,
+                        total: items.length
+                    };
+                })
+                .sort((left, right) => {
+                    if (left.identity.calendarDate !== right.identity.calendarDate) {
+                        return left.identity.calendarDate.localeCompare(right.identity.calendarDate, 'zh-CN');
+                    }
+                    if (left.identity.version !== right.identity.version) {
+                        return left.identity.version.localeCompare(right.identity.version, 'zh-CN');
+                    }
+                    return left.identity.owner.localeCompare(right.identity.owner, 'zh-CN');
+                });
+
+            return {
+                rows: Array.from(dedupedMap.values()),
+                originalCount: rows.length,
+                dedupedCount: dedupedMap.size,
+                removedCount: Math.max(0, rows.length - dedupedMap.size),
+                duplicateGroupCount: duplicateGroups.length,
+                duplicateGroups
+            };
+        }
+
+        function getCalendarRows(monthKey) {
+            return dedupeCalendarRows(getCalendarExpandedRows(monthKey)).rows;
+        }
+
+        function renderCalendarDedupDebugModule(monthKey) {
+            const filteredExpandedRows = applyCalendarFilters(getCalendarExpandedRows(monthKey));
+            const debugInfo = dedupeCalendarRows(filteredExpandedRows);
+            const previewGroups = debugInfo.duplicateGroups.slice(0, 8);
+            const ruleText = '同一逻辑任务优先按 日期 + 成员 + 版本号 + 版本内容 + 交付物 去重；若版本内容缺失，再按版本号 + 主排期识别；若仍不足，再回退到 Objective、业务 KR 和任务类型。';
+            const priorityText = '保留优先级 = period 更新 > 有实际完成时间 > 有规定完成时间 > 有 segmented_time > progress 更高。';
+
+            return `
+                <section class="board-analysis-shell">
+                    <div class="board-analysis-head">
+                        <div>
+                            <div class="board-analysis-kicker">Calendar Debug</div>
+                            <div class="board-analysis-title">日历去重调试</div>
+                            <div class="board-analysis-subtitle">把当前月份和筛选条件下的展开卡片、去重规则与命中的跨月重复组直接展示出来，方便排查为什么会被视为同一逻辑任务。</div>
+                        </div>
+                        <div class="board-analysis-period">${escapeHtml(formatCalendarMonthLabel(monthKey))}</div>
+                    </div>
+                    <div class="board-analysis-grid">
+                        <section class="board-analysis-panel">
+                            <div class="board-analysis-panel-title">判定规则</div>
+                            <div class="board-analysis-list">
+                                <div class="board-analysis-item">
+                                    <strong>同一逻辑任务键</strong>
+                                    <span>${escapeHtml(ruleText)}</span>
+                                </div>
+                                <div class="board-analysis-item">
+                                    <strong>保留优先级</strong>
+                                    <span>${escapeHtml(priorityText)}</span>
+                                </div>
+                                <div class="board-analysis-item">
+                                    <strong>当前筛选范围</strong>
+                                    <span>${escapeHtml(`小组：${state.calendarFilterGroup === 'all' ? '所有小组' : state.calendarFilterGroup}；成员：${state.calendarFilterMember === 'all' ? '所有成员' : state.calendarFilterMember}；模式：${state.calendarMode === 'all' ? '全部' : state.calendarMode === 'planned' ? '按规划完成时间' : '按实际完成时间'}`)}</span>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="board-analysis-panel">
+                            <div class="board-analysis-panel-title">本次去重结果</div>
+                            <div class="board-analysis-metrics">
+                                <div class="board-analysis-metric">
+                                    <div class="board-analysis-label">展开卡片数</div>
+                                    <div class="board-analysis-value">${debugInfo.originalCount}</div>
+                                    <div class="board-analysis-note">去重前按日期展开后的任务卡片总数。</div>
+                                </div>
+                                <div class="board-analysis-metric">
+                                    <div class="board-analysis-label">保留卡片数</div>
+                                    <div class="board-analysis-value">${debugInfo.dedupedCount}</div>
+                                    <div class="board-analysis-note">按逻辑任务键合并后保留下来的卡片数。</div>
+                                </div>
+                                <div class="board-analysis-metric">
+                                    <div class="board-analysis-label">移除重复数</div>
+                                    <div class="board-analysis-value">${debugInfo.removedCount}</div>
+                                    <div class="board-analysis-note">本次实际被隐藏的重复卡片数量。</div>
+                                </div>
+                                <div class="board-analysis-metric">
+                                    <div class="board-analysis-label">重复组数</div>
+                                    <div class="board-analysis-value">${debugInfo.duplicateGroupCount}</div>
+                                    <div class="board-analysis-note">命中“同一逻辑任务”规则的重复组数量。</div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="board-analysis-grid" style="margin-top: 16px;">
+                        <section class="board-analysis-panel" style="grid-column: 1 / -1;">
+                            <div class="board-analysis-panel-title">命中的重复组</div>
+                            ${previewGroups.length ? `
+                                <div class="board-analysis-list">
+                                    ${previewGroups.map(group => {
+                                        const removedPeriods = group.removed.map(row => row.period).filter(Boolean);
+                                        const removedLabels = group.removed.map(row => `${row.period} · ${row.task_name || row.objective_text || row.key_result_text || '未命名任务'}`);
+                                        const keptLabel = `${group.kept.period} · ${group.kept.task_name || group.kept.objective_text || group.kept.key_result_text || '未命名任务'}`;
+                                        const identityText = `日期 ${group.identity.calendarDate} / 成员 ${group.identity.owner} / 版本 ${group.identity.version} / 键 ${group.identity.objectiveOrTitle} / 类型 ${group.identity.taskType}`;
+                                        return `
+                                            <div class="board-analysis-item">
+                                                <strong>${escapeHtml(`${group.identity.calendarDate} · ${group.identity.version} · ${group.identity.owner}`)}</strong>
+                                                <span>${escapeHtml(`判定依据：${identityText}。保留：${keptLabel}。移除：${removedLabels.join('；') || '无'}。`)}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : `
+                                <div class="board-analysis-empty">当前月份和筛选条件下没有发现跨月重复卡片。</div>
+                            `}
+                        </section>
+                    </div>
+                </section>
+            `;
         }
 
         function getCalendarFilterOptions(rows) {
@@ -7103,7 +7353,8 @@
         }
 
         function getCalendarVersionLabel(row) {
-            return String(row.version_no || row.version || row.version_requirement || '未填写版本号').trim() || '未填写版本号';
+            const explicitVersion = String(row.version_no || '').trim();
+            return explicitVersion || '未填写版本号';
         }
 
         function getProductToneKey(productName) {
@@ -7910,14 +8161,18 @@
             const planningIssues = versions.flatMap(version => version.planning_items || []);
             const requirementIssues = allIssues.filter(issue => issue.type === '需求');
             const bugIssues = allIssues.filter(issue => issue.type === '缺陷');
+            const planningClosedCount = planningIssues.filter(issue => issue.is_closed).length;
+            const requirementClosedCount = requirementIssues.filter(issue => issue.is_closed).length;
             return {
                 versionCount: versions.length,
                 activeVersionCount: versions.filter(version => version.status_key === 'open').length,
                 closedVersionCount: versions.filter(version => version.status_key === 'closed').length,
                 planningCount: planningIssues.length,
                 openPlanningCount: planningIssues.filter(issue => !issue.is_closed).length,
+                closedPlanningCount: planningClosedCount,
                 requirementCount: requirementIssues.length,
                 openRequirementCount: requirementIssues.filter(issue => !issue.is_closed).length,
+                closedRequirementCount: requirementClosedCount,
                 bugCount: bugIssues.length,
                 bugStatusBreakdown: bugIssues.reduce((accumulator, issue) => {
                     const key = issue.status_key || 'unknown';
@@ -7958,15 +8213,86 @@
             return `${productName || 'unknown'}::${statusKey || 'all'}`;
         }
 
+        function getProjectBoardPlatformSelectionKey(productName, statusKey) {
+            return `${productName || 'unknown'}::${statusKey || 'all'}`;
+        }
+
+        function classifyProjectBoardPlatform(product, version) {
+            const productName = String(product?.name || version?.product_name || '').trim();
+            const projectName = String(version?.project_name || '').trim();
+            if (/admin console/i.test(projectName)) return 'Admin Console';
+            if (/\bios\b/i.test(projectName)) return 'IOS';
+            if (/\bmac\b/i.test(projectName)) return 'Mac';
+            if (/\bwindows\b/i.test(projectName)) return 'Windows';
+            if (/\bweb\b/i.test(projectName)) return 'Web';
+            if (/官网/.test(projectName)) return '官网';
+            if (/后台/.test(projectName)) return '后台';
+            if (/(需求池|feedback|client&ro|客服)/i.test(projectName)) return '需求/反馈';
+            if (/(app|android|uwp)/i.test(projectName)) return 'APP';
+            if (projectName === productName) return '主线';
+            return '其他';
+        }
+
+        function getProjectBoardPlatformOptions(product, versions) {
+            const categoryOrder = ['主线', 'APP', 'IOS', 'Mac', 'Windows', 'Web', '官网', '后台', 'Admin Console', '需求/反馈', '其他'];
+            const optionMap = new Map();
+            versions.forEach(version => {
+                const platform = classifyProjectBoardPlatform(product, version);
+                if (!optionMap.has(platform)) {
+                    optionMap.set(platform, {
+                        value: platform,
+                        label: platform,
+                        count: 0
+                    });
+                }
+                optionMap.get(platform).count += 1;
+            });
+            return Array.from(optionMap.values()).sort((left, right) => {
+                const leftIndex = categoryOrder.indexOf(left.value);
+                const rightIndex = categoryOrder.indexOf(right.value);
+                return (leftIndex === -1 ? 999 : leftIndex) - (rightIndex === -1 ? 999 : rightIndex);
+            });
+        }
+
+        function getProjectBoardVersionsByPlatform(product, versions, platformValue) {
+            if (!platformValue || platformValue === 'all') return versions;
+            return versions.filter(version => classifyProjectBoardPlatform(product, version) === platformValue);
+        }
+
+        function ensureSelectedProjectBoardPlatform(product, versions, statusKey) {
+            const selectionKey = getProjectBoardPlatformSelectionKey(product?.name, statusKey);
+            const options = getProjectBoardPlatformOptions(product, versions);
+            const selectedPlatform = String(state.projectBoardPlatformSelection[selectionKey] || 'all');
+            if (options.length === 1) {
+                const autoSelectedPlatform = options[0].value;
+                if (selectedPlatform !== autoSelectedPlatform) {
+                    state.projectBoardPlatformSelection[selectionKey] = autoSelectedPlatform;
+                    persistProjectBoardPreferences();
+                }
+                return autoSelectedPlatform;
+            }
+            if (selectedPlatform === 'all' || options.some(option => option.value === selectedPlatform)) {
+                return selectedPlatform;
+            }
+            state.projectBoardPlatformSelection[selectionKey] = 'all';
+            persistProjectBoardPreferences();
+            return 'all';
+        }
+
         function ensureSelectedProjectBoardVersion(productName, versions, statusKey) {
-            if (!versions.length) return null;
             const selectionKey = getProjectBoardVersionSelectionKey(productName, statusKey);
             const selectedId = String(state.projectBoardVersionSelection[selectionKey] || '');
-            const matched = versions.find(version => String(version.id) === selectedId);
-            if (matched) return matched;
-            state.projectBoardVersionSelection[selectionKey] = String(versions[0].id);
-            persistProjectBoardPreferences();
-            return versions[0];
+            if (!versions.length) return null;
+            if (versions.length === 1) {
+                const autoSelectedVersionId = String(versions[0].id);
+                if (selectedId !== autoSelectedVersionId) {
+                    state.projectBoardVersionSelection[selectionKey] = autoSelectedVersionId;
+                    persistProjectBoardPreferences();
+                }
+                return versions[0];
+            }
+            if (!selectedId) return null;
+            return versions.find(version => String(version.id) === selectedId) || null;
         }
 
         function selectProjectBoardStatus(status) {
@@ -7975,22 +8301,33 @@
             renderPage('pdf-line-overview');
         }
 
-        function selectProjectBoardVersion(productName, statusKey, versionId) {
-            state.projectBoardVersionSelection[getProjectBoardVersionSelectionKey(productName, statusKey)] = String(versionId);
+        function selectProjectBoardPlatform(productName, statusKey, platformValue) {
+            state.projectBoardPlatformSelection[getProjectBoardPlatformSelectionKey(productName, statusKey)] = platformValue || 'all';
+            state.projectBoardVersionSelection[getProjectBoardVersionSelectionKey(productName, statusKey)] = '';
             persistProjectBoardPreferences();
             renderPage('pdf-line-overview');
         }
 
-        function renderProjectBoardStatusTabs() {
+        function selectProjectBoardVersion(productName, statusKey, versionId, platformValue = '') {
+            if (platformValue) {
+                state.projectBoardPlatformSelection[getProjectBoardPlatformSelectionKey(productName, statusKey)] = platformValue;
+            }
+            state.projectBoardVersionSelection[getProjectBoardVersionSelectionKey(productName, statusKey)] = String(versionId || '');
+            persistProjectBoardPreferences();
+            renderPage('pdf-line-overview');
+        }
+
+        function renderProjectBoardStatusTabs(product) {
+            const stats = product?.stats || {};
             const tabs = [
-                { value: 'open', label: '进行中状态' },
-                { value: 'all', label: '全部状态' },
-                { value: 'closed', label: '已关闭状态' }
+                { value: 'all', label: '全部状态', count: stats.version_count ?? 0 },
+                { value: 'open', label: '进行中状态', count: stats.active_version_count ?? 0 },
+                { value: 'closed', label: '已关闭状态', count: stats.closed_version_count ?? 0 }
             ];
             return `
                 <div class="project-board-status-tabs">
                     ${tabs.map(tab => `
-                        <button class="project-board-status-tab ${state.projectBoardVersionStatus === tab.value ? 'active' : ''}" type="button" onclick="selectProjectBoardStatus('${tab.value}')">${tab.label}</button>
+                        <button class="project-board-status-tab ${state.projectBoardVersionStatus === tab.value ? 'active' : ''}" type="button" onclick="selectProjectBoardStatus('${tab.value}')">${tab.label} · ${tab.count}</button>
                     `).join('')}
                 </div>
             `;
@@ -8001,84 +8338,86 @@
                 <div class="product-tab-bar">
                     ${products.map(product => `
                         <button class="product-tab ${getProductToneClass(product.name)} ${product.name === selectedProduct ? 'active' : ''}" type="button" onclick="selectProductTab('pdf-line-overview', '${product.name.replace(/'/g, '\&#39;')}')">
-                            ${product.name} · ${product.stats?.active_version_count ?? 0}个活跃版本
+                            ${product.name}
                         </button>
                     `).join('')}
                 </div>
             `;
         }
 
-        function renderProjectBoardVersionTabs(product, versions, selectedVersionId) {
-            const categoryOrder = ['主线', 'APP', 'IOS', 'Mac', 'Windows', 'Web', '官网', '后台', 'Admin Console', '需求/反馈', '其他'];
-            const grouped = versions.reduce((acc, version) => {
-                const projectName = String(version.project_name || '').trim();
-                let category = '其他';
-                if (/admin console/i.test(projectName)) {
-                    category = 'Admin Console';
-                } else if (/\bios\b/i.test(projectName)) {
-                    category = 'IOS';
-                } else if (/\bmac\b/i.test(projectName)) {
-                    category = 'Mac';
-                } else if (/\bwindows\b/i.test(projectName)) {
-                    category = 'Windows';
-                } else if (/\bweb\b/i.test(projectName)) {
-                    category = 'Web';
-                } else if (/官网/.test(projectName)) {
-                    category = '官网';
-                } else if (/后台/.test(projectName)) {
-                    category = '后台';
-                } else if (/(需求池|feedback|client&ro|客服)/i.test(projectName)) {
-                    category = '需求/反馈';
-                } else if (/(app|android|uwp)/i.test(projectName)) {
-                    category = 'APP';
-                } else if (projectName === product.name) {
-                    category = '主线';
-                }
-                if (!acc[category]) acc[category] = [];
-                acc[category].push(version);
-                return acc;
-            }, {});
-
-            const sortedCategories = Object.keys(grouped).sort((left, right) => {
-                const leftIndex = categoryOrder.indexOf(left);
-                const rightIndex = categoryOrder.indexOf(right);
-                return (leftIndex === -1 ? 999 : leftIndex) - (rightIndex === -1 ? 999 : rightIndex);
-            });
-
+        function renderProjectBoardVersionFilters(product, versions, selectedPlatform, selectedVersionId) {
+            const platformOptions = getProjectBoardPlatformOptions(product, versions);
+            const versionOptions = getProjectBoardVersionsByPlatform(product, versions, selectedPlatform);
             return `
-                <div class="project-board-version-tabs">
-                    ${sortedCategories.map(category => `
-                        <div class="project-board-version-group">
-                            <div class="project-board-version-group-label">${escapeHtml(category)}</div>
-                            <div class="project-board-version-group-list">
-                                ${grouped[category].map(version => {
-                                    const isActive = String(version.id) === String(selectedVersionId);
-                                    return `
-                                        <button
-                                            class="project-board-version-tab ${getProductToneClass(product.name)} ${isActive ? 'active' : ''}"
-                                            type="button"
-                                            onclick="selectProjectBoardVersion('${product.name.replace(/'/g, '\&#39;')}', '${state.projectBoardVersionStatus}', '${version.id}')"
-                                        >
-                                            <span>${escapeHtml(version.name)}</span>
-                                            <small>${escapeHtml(version.project_name || category)}</small>
-                                            <strong>${version.open_planning_count || 0}项版本内容</strong>
-                                        </button>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
+                <div class="project-board-linked-filters">
+                    <div class="project-board-linked-filter-card">
+                        <div class="project-board-linked-filter-label">平台</div>
+                        <select class="project-board-linked-filter-select" onchange="selectProjectBoardPlatform('${product.name.replace(/'/g, '\&#39;')}', '${state.projectBoardVersionStatus}', this.value)">
+                            <option value="all" ${selectedPlatform === 'all' ? 'selected' : ''}>全部平台</option>
+                            ${platformOptions.map(option => `
+                                <option value="${escapeHtml(option.value)}" ${selectedPlatform === option.value ? 'selected' : ''}>${escapeHtml(option.label)} · ${option.count}个版本</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="project-board-linked-filter-card project-board-linked-filter-card-wide">
+                        <div class="project-board-linked-filter-label">版本号</div>
+                        <select class="project-board-linked-filter-select" onchange="selectProjectBoardVersion('${product.name.replace(/'/g, '\&#39;')}', '${state.projectBoardVersionStatus}', this.value, '${selectedPlatform.replace(/'/g, '\&#39;')}')">
+                            <option value="" ${selectedVersionId ? '' : 'selected'}>全部版本，请手动选择一个版本</option>
+                            ${versionOptions.map(version => `
+                                <option value="${version.id}" ${String(version.id) === String(selectedVersionId) ? 'selected' : ''}>${escapeHtml(version.name)} · ${escapeHtml(version.project_name || classifyProjectBoardPlatform(product, version))} · ${version.planning_count || 0}项版本内容</option>
+                            `).join('')}
+                        </select>
+                    </div>
                 </div>
             `;
         }
 
+        function syncProjectBoardPlatformByVersion(product, versions, statusKey, selectedVersion) {
+            if (!selectedVersion) return 'all';
+            const inferredPlatform = classifyProjectBoardPlatform(product, selectedVersion);
+            const selectionKey = getProjectBoardPlatformSelectionKey(product?.name, statusKey);
+            const currentPlatform = String(state.projectBoardPlatformSelection[selectionKey] || 'all');
+            const validPlatforms = getProjectBoardPlatformOptions(product, versions).map(option => option.value);
+            if (currentPlatform !== 'all' && validPlatforms.includes(currentPlatform) && currentPlatform === inferredPlatform) {
+                return currentPlatform;
+            }
+            state.projectBoardPlatformSelection[selectionKey] = inferredPlatform;
+            persistProjectBoardPreferences();
+            return inferredPlatform;
+        }
+
+        function resolveProjectBoardSelectedVersion(product, visibleVersions, statusKey) {
+            const selectedPlatform = ensureSelectedProjectBoardPlatform(product, visibleVersions, statusKey);
+            const platformVersions = getProjectBoardVersionsByPlatform(product, visibleVersions, selectedPlatform);
+            const versionPool = platformVersions.length ? platformVersions : visibleVersions;
+            const selectedVersion = ensureSelectedProjectBoardVersion(product.name, versionPool, statusKey);
+            if (!selectedVersion) {
+                return {
+                    selectedPlatform,
+                    selectedVersion: null,
+                    platformVersions: versionPool
+                };
+            }
+            const syncedPlatform = syncProjectBoardPlatformByVersion(product, visibleVersions, statusKey, selectedVersion);
+            const syncedPlatformVersions = getProjectBoardVersionsByPlatform(product, visibleVersions, syncedPlatform);
+            const resolvedVersion = ensureSelectedProjectBoardVersion(product.name, syncedPlatformVersions.length ? syncedPlatformVersions : visibleVersions, statusKey);
+            return {
+                selectedPlatform: syncedPlatform,
+                selectedVersion: resolvedVersion,
+                platformVersions: syncedPlatformVersions.length ? syncedPlatformVersions : visibleVersions
+            };
+        }
+
         function renderProjectBoardSummaryCards() {
             const stats = state.projectBoardData.global_stats || {};
+            const closedVersionCount = Math.max((stats.version_count || 0) - (stats.active_version_count || 0), 0);
+            const closedPlanningCount = Math.max((stats.planning_count || 0) - (stats.open_planning_count || 0), 0);
+            const closedRequirementCount = Math.max((stats.requirement_count || 0) - (stats.open_requirement_count || 0), 0);
             const cards = [
                 { label: '产品', value: stats.product_count || 0, note: '当前接入 Redmine 的产品范围' },
-                { label: '活跃版本', value: stats.active_version_count || 0, note: '当前处于 open 状态的版本' },
-                { label: '产品规划', value: stats.open_planning_count || 0, note: '未关闭的规划/版本规划节点' },
-                { label: '当前需求', value: stats.open_requirement_count || 0, note: '未关闭的需求项' },
+                { label: '版本总数', value: stats.version_count || 0, note: `进行中 ${stats.active_version_count || 0}，已关闭 ${closedVersionCount}` },
+                { label: '版本内容', value: stats.planning_count || 0, note: `进行中 ${stats.open_planning_count || 0}，已关闭 ${closedPlanningCount}` },
+                { label: '需求总数', value: stats.requirement_count || 0, note: `进行中 ${stats.open_requirement_count || 0}，已关闭 ${closedRequirementCount}` },
                 { label: '测试中版本', value: stats.testing_version_count || 0, note: '已进入测试/验收阶段的版本' },
                 { label: '待上线版本', value: stats.release_version_count || 0, note: '已有上线节点的版本' },
                 { label: '缺陷', value: stats.bug_count || 0, note: '当前版本内的 Bug 总量' }
@@ -8115,9 +8454,9 @@
             const stats = summarizeProjectBoardVersions(visibleVersions);
             const bugBreakdownText = Object.entries(stats.bugStatusBreakdown || {}).map(([statusKey, count]) => `${formatProjectBoardStatusLabel(statusKey)} ${count}`).join(' / ') || '当前状态下无 Bug';
             const cards = [
-                { label: '当前显示版本', value: stats.versionCount, note: `总版本 ${product.stats?.version_count ?? 0}` },
-                { label: '产品规划', value: stats.openPlanningCount, note: `累计规划 ${stats.planningCount}` },
-                { label: '当前需求', value: stats.openRequirementCount, note: `累计需求 ${stats.requirementCount}` },
+                { label: '当前显示版本', value: stats.versionCount, note: `进行中 ${stats.activeVersionCount} · 已关闭 ${stats.closedVersionCount}` },
+                { label: '版本内容', value: stats.planningCount, note: `进行中 ${stats.openPlanningCount} · 已关闭 ${stats.closedPlanningCount}` },
+                { label: '需求总数', value: stats.requirementCount, note: `进行中 ${stats.openRequirementCount} · 已关闭 ${stats.closedRequirementCount}` },
                 { label: '测试节点', value: stats.testingVersionCount, note: '含测试/验收任务的版本数' },
                 { label: '上线节点', value: stats.releaseVersionCount, note: '含上线任务或上线日期的版本数' },
                 { label: '缺陷', value: stats.bugCount, note: bugBreakdownText },
@@ -8235,8 +8574,8 @@
                 <div class="project-version-stage-grid">
                     <section class="project-version-summary-card">
                         <div class="project-version-summary-label">版本内容</div>
-                        <div class="project-version-summary-value">${version.open_planning_count || 0}</div>
-                        <div class="project-version-summary-note">总版本内容 ${version.planning_count || 0}，已关闭 ${(version.planning_count || 0) - (version.open_planning_count || 0)}</div>
+                        <div class="project-version-summary-value">${version.planning_count || 0}</div>
+                        <div class="project-version-summary-note">进行中 ${version.open_planning_count || 0}，已关闭 ${(version.planning_count || 0) - (version.open_planning_count || 0)}</div>
                     </section>
                     <section class="project-version-summary-card">
                         <div class="project-version-summary-label">Bug 状态</div>
@@ -8293,7 +8632,7 @@
                 <section class="project-version-section lifecycle-grid-span">
                     <div class="project-version-section-head">
                         <div class="project-version-section-title">完整生命周期</div>
-                        <div class="project-version-section-subtitle">${createdOnLabel} · 依次查看规划、文案、设计、开发、测试、上线的时间与具体事项</div>
+                        <div class="project-version-section-subtitle">${createdOnLabel} · 依次查看规划、文案、设计、开发、测试、打包提交上线的时间与具体事项</div>
                     </div>
                     <div class="project-lifecycle-grid">
                         ${stageOrder.map(stageKey => {
@@ -8348,8 +8687,8 @@
                                 <span class="project-version-chip ${version.status_key === 'closed' ? 'is-closed' : ''}">${version.status_key === 'closed' ? '已关闭' : '进行中'}</span>
                             </div>
                             <div class="project-version-meta">
-                                <span>版本内容 ${version.open_planning_count || 0}/${version.planning_count || 0}</span>
-                                <span>普通需求 ${version.open_requirement_count || 0}/${version.requirement_count || 0}</span>
+                                <span>版本内容 ${version.planning_count || 0}</span>
+                                <span>普通需求 ${version.requirement_count || 0}</span>
                                 <span>Issue ${version.issue_count}</span>
                                 <span>缺陷 ${version.bug_count}</span>
                                 <span>负责人 ${escapeHtml((version.owners || []).join('、') || '待补充')}</span>
@@ -8363,6 +8702,7 @@
                     </div>
                     ${renderProjectBoardVersionSummaryGrid(version)}
                     ${renderProjectBoardTrackerStats(version)}
+                    ${renderProjectBoardLifecycleSection(version)}
                     <section class="project-version-section">
                         <div class="project-version-section-head">
                             <div class="project-version-section-title">版本内容</div>
@@ -8370,7 +8710,6 @@
                         </div>
                         ${planningItems.length ? `<div class="project-requirement-list">${planningItems.map(renderProjectBoardRequirementItem).join('')}</div>` : '<div class="project-version-empty">当前版本还没有抓到专案组 PM 提交的 Future/Feature 内容。</div>'}
                     </section>
-                    ${renderProjectBoardLifecycleSection(version)}
                 </section>
             `;
         }
@@ -8388,26 +8727,27 @@
             const selectedProduct = ensureSelectedProduct('pdf-line-overview', products);
             const selected = products.find(product => product.name === selectedProduct) || products[0];
             const visibleVersions = getProjectBoardVisibleVersions(selected);
-            const selectedVersion = ensureSelectedProjectBoardVersion(selected.name, visibleVersions, state.projectBoardVersionStatus);
+            const selectionState = resolveProjectBoardSelectedVersion(selected, visibleVersions, state.projectBoardVersionStatus);
+            const selectedVersion = selectionState.selectedVersion;
 
             return `
                 <div class="project-board-shell">
                     <div class="project-board-toolbar project-board-filter-stack">
                         <div class="project-board-filter-row">
-                            <div class="project-board-filter-label">产品</div>
                             ${renderProjectBoardProductTabs(products, selected.name)}
                         </div>
                         <div class="project-board-filter-row">
                             <div class="project-board-filter-label">状态</div>
-                            ${renderProjectBoardStatusTabs()}
+                            ${renderProjectBoardStatusTabs(selected)}
                         </div>
-                        <div class="project-board-filter-row">
-                            <div class="project-board-filter-label">版本</div>
-                            ${visibleVersions.length ? renderProjectBoardVersionTabs(selected, visibleVersions, selectedVersion?.id) : '<div class="project-version-empty">当前状态下没有可选版本。</div>'}
-                        </div>
+                        ${visibleVersions.length ? `
+                            <div class="project-board-filter-row">
+                                ${renderProjectBoardVersionFilters(selected, visibleVersions, selectionState.selectedPlatform, selectedVersion?.id)}
+                            </div>
+                        ` : '<div class="project-version-empty">当前状态下没有可选版本。</div>'}
                     </div>
                     <div class="project-board-product-panel">
-                        ${selectedVersion ? `<div class="project-board-version-list">${renderProjectBoardVersionCard(selectedVersion)}</div>` : '<div class="project-version-empty">当前筛选条件下没有版本，切换到“全部状态”可以查看历史版本。</div>'}
+                        ${selectedVersion ? `<div class="project-board-version-list">${renderProjectBoardVersionCard(selectedVersion)}</div>` : '<div class="project-version-empty">请先在上方版本号筛选中手动选择一个版本，再查看下方内容。</div>'}
                     </div>
                 </div>
             `;
@@ -8954,6 +9294,7 @@
                     </div>
                     ${renderCalendarBoard(filteredRows, calendarMonth)}
                     ${isPublicSinglePageMode() ? '' : renderBoardAnalysisModule('日历看板分析', '围绕当前月份和筛选条件，快速判断任务密度、责任压力和延期风险。', filteredRows, formatCalendarMonthLabel(calendarMonth))}
+                    ${isPublicSinglePageMode() ? '' : renderCalendarDedupDebugModule(calendarMonth)}
                 `;
                 container.innerHTML = renderPublicPageLayout(content);
                 return;
