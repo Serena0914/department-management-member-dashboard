@@ -1,1 +1,3 @@
-Public member-only dashboard bundle.
+# department-management-member-dashboard
+
+This public site has been taken offline.
